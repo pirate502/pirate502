@@ -1,491 +1,1366 @@
-import React, { useState } from 'react';
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Sinh viên</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-// Library_UI_Mockups.jsx
-// Single-file preview with multiple React components (Tailwind CSS required in host project).
-// Default export: App (preview harness) which lets you switch between screens.
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
 
-// ---------- Sample data ----------
-const sampleBooks = [
-  {
-    id: 'B-001',
-    isbn: '9780143127741',
-    title: 'Deep Work',
-    authors: ['Cal Newport'],
-    category: 'Self-Help',
-    year: 2016,
-    status: 'Available',
-    copies: 3,
-    location: 'Shelf A3'
-  },
-  {
-    id: 'B-002',
-    isbn: '9780262033848',
-    title: 'Introduction to Algorithms',
-    authors: ['Thomas H. Cormen', 'Charles E. Leiserson'],
-    category: 'Computer Science',
-    year: 2009,
-    status: 'Borrowed',
-    copies: 2,
-    location: 'Shelf B1'
-  }
-];
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
 
-const sampleMembers = [
-  { id: 'M-001', name: 'Nguyễn Văn A', email: 'a@example.com', type: 'Student', status: 'Active', loans: 1, fines: 0 },
-  { id: 'M-002', name: 'Trần Thị B', email: 'b@example.com', type: 'Staff', status: 'Active', loans: 0, fines: 10000 }
-];
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
-// ---------- UI Primitives ----------
-function PrimaryButton({ children, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-    >
-      {children}
-    </button>
-  );
-}
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
 
-function SecondaryButton({ children, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="px-3 py-1 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 focus:outline-none"
-    >
-      {children}
-    </button>
-  );
-}
+        .search-box {
+            position: relative;
+        }
 
-function IconBadge({ children }) {
-  return (
-    <div className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-gray-100">{children}</div>
-  );
-}
+        .search-box input {
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border-radius: 20px;
+            border: none;
+            width: 300px;
+            outline: none;
+        }
 
-// ---------- 1. Dashboard ----------
-export function Dashboard() {
-  return (
-    <div className="p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Thư viện - Dashboard</h1>
-          <p className="text-sm text-gray-600">Tổng quan hệ thống và các hành động nhanh</p>
+        .search-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: white;
+            padding: 1.5rem 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover, .menu-item.active {
+            background: #f0f4ff;
+            border-left-color: #667eea;
+            color: #667eea;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .chart-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .toolbar-left, .toolbar-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover {
+            background: #d5dbdb;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-select {
+            padding: 0.6rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .data-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .avatar-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .action-view {
+            background: #3498db;
+            color: white;
+        }
+
+        .action-edit {
+            background: #f39c12;
+            color: white;
+        }
+
+        .action-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .form-label .required {
+            color: #e74c3c;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f1f3f5;
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .quick-actions {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .quick-actions h3 {
+            margin-bottom: 1rem;
+        }
+
+        .quick-action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .quick-action-btn {
+            padding: 1rem;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .quick-action-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            color: #667eea;
+        }
+
+        .notification {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 2000;
+            animation: slideIn 0.3s;
+            display: none;
+        }
+
+        .notification.active {
+            display: block;
+        }
+
+        .notification.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .notification.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                height: 100%;
+                z-index: 999;
+                transition: left 0.3s;
+            }
+
+            .sidebar.mobile-active {
+                left: 0;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-section {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .search-box input {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="notification" id="notification"></div>
+
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">🎓 QLSV</div>
+            <div class="search-box">
+                <input type="text" placeholder="Tìm kiếm sinh viên, lớp..." id="globalSearch">
+                <span class="search-icon">🔍</span>
+            </div>
         </div>
-        <div className="flex items-center gap-3">
-          <input className="border rounded px-3 py-1" placeholder="Tìm kiếm toàn cục... (tiêu đề, tác giả, ISBN)" />
-          <PrimaryButton>Thêm sách</PrimaryButton>
+        <div class="header-right">
+            <div class="btn-secondary" style="padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;">
+                🔔 <span style="background: #e74c3c; color: white; padding: 0.1rem 0.4rem; border-radius: 50%; font-size: 0.75rem;">3</span>
+            </div>
+            <div class="btn-secondary" style="padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;">❓ Hỗ trợ</div>
+            <div class="user-avatar" onclick="showUserMenu()">AD</div>
         </div>
-      </header>
-
-      <section className="grid grid-cols-4 gap-4">
-        <div className="p-4 bg-white rounded shadow">
-          <div className="text-sm text-gray-500">Tổng số sách</div>
-          <div className="text-2xl font-semibold">{sampleBooks.length * 10}</div>
-          <div className="text-xs text-gray-400">Trend: ↑ 5% so với tháng trước</div>
-        </div>
-
-        <div className="p-4 bg-white rounded shadow">
-          <div className="text-sm text-gray-500">Sách đang cho mượn</div>
-          <div className="text-2xl font-semibold">{Math.floor(sampleBooks.length / 2)}</div>
-          <div className="text-xs text-gray-400">Overdue: 3</div>
-        </div>
-
-        <div className="p-4 bg-white rounded shadow">
-          <div className="text-sm text-gray-500">Thành viên</div>
-          <div className="text-2xl font-semibold">{sampleMembers.length}</div>
-          <div className="text-xs text-gray-400">Active: {sampleMembers.filter(m => m.status === 'Active').length}</div>
-        </div>
-
-        <div className="p-4 bg-white rounded shadow">
-          <div className="text-sm text-gray-500">Báo cáo nhanh</div>
-          <div className="text-lg font-semibold">Top sách mượn</div>
-          <ul className="mt-2 text-sm text-gray-700 space-y-1">
-            {sampleBooks.map(b => (
-              <li key={b.id} className="truncate">{b.title} <span className="text-xs text-gray-400">({b.copies})</span></li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="grid grid-cols-2 gap-4">
-        <div className="p-4 bg-white rounded shadow">
-          <h3 className="font-semibold">Recent Activities</h3>
-          <ul className="text-sm text-gray-600 mt-3 space-y-2">
-            <li>Nguyễn Văn A mượn "Deep Work" — 2025-10-10</li>
-            <li>Thêm sách "A Modern Approach to Quantum Mechanics" — 2025-09-30</li>
-            <li>Tạo thành viên: Trần Thị B — 2025-09-20</li>
-          </ul>
-        </div>
-        <div className="p-4 bg-white rounded shadow">
-          <h3 className="font-semibold">Quick Actions</h3>
-          <div className="mt-3 flex flex-col gap-3">
-            <PrimaryButton>Thêm sách</PrimaryButton>
-            <SecondaryButton>Import CSV</SecondaryButton>
-            <SecondaryButton>Export báo cáo</SecondaryButton>
-          </div>
-        </div>
-      </section>
     </div>
-  );
-}
 
-// ---------- 2. Books List ----------
-export function BooksList({ onView }) {
-  const [query, setQuery] = useState('');
-  const [selected, setSelected] = useState({});
-
-  const filtered = sampleBooks.filter(b => (
-    b.title.toLowerCase().includes(query.toLowerCase()) ||
-    b.authors.join(' ').toLowerCase().includes(query.toLowerCase()) ||
-    b.isbn.includes(query)
-  ));
-
-  function toggleSelect(id) {
-    setSelected(prev => ({ ...prev, [id]: !prev[id] }));
-  }
-
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Kho sách</h2>
-        <div className="flex items-center gap-2">
-          <input value={query} onChange={e => setQuery(e.target.value)} className="border rounded px-3 py-1" placeholder="Tìm theo tiêu đề, tác giả, ISBN..." />
-          <PrimaryButton>Thêm sách</PrimaryButton>
-        </div>
-      </div>
-
-      <div className="bg-white rounded shadow overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="p-3 text-left"><input type="checkbox" /></th>
-              <th className="p-3 text-left">ISBN</th>
-              <th className="p-3 text-left">Tiêu đề</th>
-              <th className="p-3 text-left">Tác giả</th>
-              <th className="p-3 text-left">Thể loại</th>
-              <th className="p-3 text-left">Năm</th>
-              <th className="p-3 text-left">Trạng thái</th>
-              <th className="p-3 text-left">Số lượng</th>
-              <th className="p-3 text-left">Vị trí</th>
-              <th className="p-3 text-left">Hành động</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(b => (
-              <tr key={b.id} className="border-t">
-                <td className="p-3"><input type="checkbox" checked={!!selected[b.id]} onChange={() => toggleSelect(b.id)} /></td>
-                <td className="p-3">{b.isbn}</td>
-                <td className="p-3 font-medium">{b.title}</td>
-                <td className="p-3">{b.authors.join(', ')}</td>
-                <td className="p-3">{b.category}</td>
-                <td className="p-3">{b.year}</td>
-                <td className="p-3"><IconBadge>{b.status}</IconBadge></td>
-                <td className="p-3">{b.copies}</td>
-                <td className="p-3">{b.location}</td>
-                <td className="p-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => onView(b)} className="text-indigo-600 hover:underline">Xem</button>
-                    <button className="text-green-600 hover:underline">Sửa</button>
-                    <button className="text-red-600 hover:underline">Xóa</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between text-sm text-gray-600">
-        <div>{Object.values(selected).filter(Boolean).length} mục được chọn</div>
-        <div>Pagination (demo)</div>
-      </div>
-    </div>
-  );
-}
-
-// ---------- 3. Book Detail ----------
-export function BookDetail({ book, onBack }) {
-  if (!book) return <div className="p-6">Vui lòng chọn một sách để xem chi tiết.</div>;
-
-  return (
-    <div className="p-6">
-      <div className="flex items-start gap-6 mb-4">
-        <div className="w-40 h-56 bg-gray-100 rounded shadow flex items-center justify-center">Cover</div>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold">{book.title}</h2>
-          <div className="text-sm text-gray-600">{book.authors.join(', ')} • {book.year}</div>
-          <div className="mt-3 flex gap-2">
-            <PrimaryButton>Sửa sách</PrimaryButton>
-            <SecondaryButton>Thêm bản in</SecondaryButton>
-            <SecondaryButton>Generate Barcode</SecondaryButton>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded shadow p-4">
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <h3 className="text-sm text-gray-500">ISBN</h3>
-            <div className="font-medium">{book.isbn}</div>
-          </div>
-          <div>
-            <h3 className="text-sm text-gray-500">Thể loại</h3>
-            <div className="font-medium">{book.category}</div>
-          </div>
-          <div>
-            <h3 className="text-sm text-gray-500">Vị trí</h3>
-            <div className="font-medium">{book.location}</div>
-          </div>
+    <div class="container">
+        <div class="sidebar" id="sidebar">
+            <div class="menu-item active" onclick="showPage('dashboard')">
+                📊 Dashboard
+            </div>
+            <div class="menu-item" onclick="showPage('students')">
+                👥 Quản lý sinh viên
+            </div>
+            <div class="menu-item" onclick="showPage('classes')">
+                🏫 Quản lý lớp học
+            </div>
+            <div class="menu-item" onclick="showPage('subjects')">
+                📚 Quản lý môn học
+            </div>
+            <div class="menu-item" onclick="showPage('grades')">
+                📝 Quản lý điểm
+            </div>
+            <div class="menu-item" onclick="showPage('statistics')">
+                📈 Thống kê - Báo cáo
+            </div>
+            <div class="menu-item" onclick="showPage('settings')">
+                ⚙️ Cài đặt hệ thống
+            </div>
         </div>
 
-        <div className="mt-6">
-          <div className="border-t pt-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold">Bản in / Copies</h4>
-              <div className="text-sm text-gray-500">{book.copies} bản</div>
+        <div class="main-content" id="mainContent">
+            <!-- Dashboard Content -->
+            <div id="dashboardPage">
+                <h1 class="page-title">Bảng điều khiển</h1>
+                
+                <div class="dashboard-cards">
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div>
+                                <div class="kpi-value">1,248</div>
+                                <div class="kpi-label">Tổng số sinh viên</div>
+                            </div>
+                            <div class="kpi-icon" style="background: #e3f2fd; color: #2196f3;">👥</div>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div>
+                                <div class="kpi-value">1,156</div>
+                                <div class="kpi-label">Sinh viên đang học</div>
+                            </div>
+                            <div class="kpi-icon" style="background: #e8f5e9; color: #4caf50;">✅</div>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div>
+                                <div class="kpi-value">45</div>
+                                <div class="kpi-label">Tổng số lớp</div>
+                            </div>
+                            <div class="kpi-icon" style="background: #fff3e0; color: #ff9800;">🏫</div>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div>
+                                <div class="kpi-value">82.5</div>
+                                <div class="kpi-label">Điểm rèn luyện TB</div>
+                            </div>
+                            <div class="kpi-icon" style="background: #f3e5f5; color: #9c27b0;">⭐</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-section">
+                    <div class="chart-card">
+                        <div class="chart-title">Tỷ lệ sinh viên theo khoa</div>
+                        <canvas id="facultyChart" height="200"></canvas>
+                    </div>
+                    
+                    <div class="chart-card">
+                        <div class="chart-title">Điểm trung bình theo học kỳ</div>
+                        <canvas id="gradeChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h3>Thao tác nhanh</h3>
+                    <div class="quick-action-grid">
+                        <div class="quick-action-btn" onclick="openAddStudentModal()">
+                            ➕ Thêm sinh viên mới
+                        </div>
+                        <div class="quick-action-btn" onclick="openCreateClassModal()">
+                            🏫 Tạo lớp học
+                        </div>
+                        <div class="quick-action-btn" onclick="showPage('grades')">
+                            📝 Nhập điểm
+                        </div>
+                        <div class="quick-action-btn" onclick="showPage('statistics')">
+                            📊 Xem báo cáo
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <table className="min-w-full text-sm mt-3">
-              <thead className="bg-gray-50"><tr><th className="p-2 text-left">Copy ID</th><th className="p-2">Barcode</th><th className="p-2">Trạng thái</th><th className="p-2">Hành động</th></tr></thead>
-              <tbody>
-                {Array.from({ length: book.copies }).map((_, i) => (
-                  <tr key={i} className="border-t"><td className="p-2">{book.id}-C{i + 1}</td><td className="p-2">{book.isbn}-{i + 1}</td><td className="p-2">Available</td><td className="p-2"> <button className="text-indigo-600">Chi tiết</button></td></tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            <!-- Students Management Page -->
+            <div id="studentsPage" style="display: none;">
+                <h1 class="page-title">Quản lý Sinh viên</h1>
+                
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <button class="btn btn-primary" onclick="openAddStudentModal()">
+                            ➕ Thêm sinh viên
+                        </button>
+                        <button class="btn btn-secondary">
+                            📥 Import Excel
+                        </button>
+                        <button class="btn btn-secondary">
+                            📤 Export
+                        </button>
+                    </div>
+                    <div class="toolbar-right">
+                        <div class="filter-group">
+                            <select class="filter-select" id="facultyFilter">
+                                <option value="">Tất cả khoa</option>
+                                <option value="cntt">Công nghệ thông tin</option>
+                                <option value="kt">Kinh tế</option>
+                                <option value="nn">Ngoại ngữ</option>
+                            </select>
+                            <select class="filter-select" id="statusFilter">
+                                <option value="">Trạng thái</option>
+                                <option value="active">Đang học</option>
+                                <option value="warning">Cảnh báo</option>
+                                <option value="suspended">Đình chỉ</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
-          <div className="border-t pt-4 mt-4">
-            <h4 className="font-semibold">Lịch sử mượn</h4>
-            <div className="text-sm text-gray-600 mt-2">(Demo) Không có dữ liệu lịch sử chi tiết trong mockup này.</div>
-          </div>
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>Mã SV</th>
+                                <th>Họ và tên</th>
+                                <th>Giới tính</th>
+                                <th>Lớp</th>
+                                <th>Khoa</th>
+                                <th>Khóa học</th>
+                                <th>Điểm TB</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTableBody">
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>SV001</td>
+                                <td>
+                                    <div class="avatar-cell">
+                                        <div class="avatar">NT</div>
+                                        <span>Nguyễn Văn Thành</span>
+                                    </div>
+                                </td>
+                                <td>Nam</td>
+                                <td>CNTT-K20A</td>
+                                <td>CNTT</td>
+                                <td>2020-2024</td>
+                                <td>8.5</td>
+                                <td><span class="status-badge status-active">Đang học</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn action-view" onclick="viewStudentDetail('SV001')">👁️</button>
+                                        <button class="action-btn action-edit" onclick="editStudent('SV001')">✏️</button>
+                                        <button class="action-btn action-delete" onclick="deleteStudent('SV001')">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>SV002</td>
+                                <td>
+                                    <div class="avatar-cell">
+                                        <div class="avatar">HA</div>
+                                        <span>Trần Thị Hương Anh</span>
+                                    </div>
+                                </td>
+                                <td>Nữ</td>
+                                <td>CNTT-K20B</td>
+                                <td>CNTT</td>
+                                <td>2020-2024</td>
+                                <td>7.2</td>
+                                <td><span class="status-badge status-warning">Cảnh báo</span></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn action-view" onclick="viewStudentDetail('SV002')">👁️</button>
+                                        <button class="action-btn action-edit" onclick="editStudent('SV002')">✏️</button>
+                                        <button class="action-btn action-delete" onclick="deleteStudent('SV002')">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Classes Management Page -->
+            <div id="classesPage" style="display: none;">
+                <h1 class="page-title">Quản lý Lớp học</h1>
+                
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <button class="btn btn-primary" onclick="openCreateClassModal()">
+                            ➕ Thêm lớp học
+                        </button>
+                        <button class="btn btn-secondary">📥 Import</button>
+                        <button class="btn btn-secondary">📤 Export</button>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>Mã lớp</th>
+                                <th>Tên lớp</th>
+                                <th>Khoa</th>
+                                <th>Khóa học</th>
+                                <th>Sĩ số</th>
+                                <th>GVCN</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>CNTT-K20A</td>
+                                <td>Công nghệ thông tin K20A</td>
+                                <td>CNTT</td>
+                                <td>2020-2024</td>
+                                <td>35/40</td>
+                                <td>TS. Nguyễn Văn A</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn action-view">👁️</button>
+                                        <button class="action-btn action-edit">✏️</button>
+                                        <button class="action-btn action-delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Subjects Management Page -->
+            <div id="subjectsPage" style="display: none;">
+                <h1 class="page-title">Quản lý Môn học</h1>
+                
+                <div class="toolbar">
+                    <div class="toolbar-left">
+                        <button class="btn btn-primary">➕ Thêm môn học</button>
+                    </div>
+                </div>
+
+                <div class="data-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã môn</th>
+                                <th>Tên môn</th>
+                                <th>Số tín chỉ</th>
+                                <th>Khoa phụ trách</th>
+                                <th>Điều kiện tiên quyết</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>IT101</td>
+                                <td>Lập trình cơ bản</td>
+                                <td>3</td>
+                                <td>CNTT</td>
+                                <td>-</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-btn action-view">👁️</button>
+                                        <button class="action-btn action-edit">✏️</button>
+                                        <button class="action-btn action-delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-      </div>
-
-      <div className="mt-4">
-        <button onClick={onBack} className="text-sm text-gray-600 hover:underline">← Quay lại</button>
-      </div>
     </div>
-  );
-}
 
-// ---------- 4. Add/Edit Book (Form) ----------
-export function AddEditBook({ initial = {}, onSave }) {
-  const [form, setForm] = useState({
-    title: initial.title || '',
-    isbn: initial.isbn || '',
-    authors: initial.authors ? initial.authors.join(', ') : '',
-    category: initial.category || '',
-    year: initial.year || '',
-    copies: initial.copies || 1,
-    location: initial.location || ''
-  });
+    <!-- Add/Edit Student Modal -->
+    <div class="modal" id="studentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Thêm sinh viên mới</h2>
+                <button class="close-btn" onclick="closeModal('studentModal')">✕</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab(event, 'personalInfo')">Thông tin cá nhân</button>
+                <button class="tab" onclick="switchTab(event, 'academicInfo')">Thông tin học tập</button>
+            </div>
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-  }
+            <div class="tab-content active" id="personalInfo">
+                <form id="studentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Họ và tên <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="studentName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Giới tính</label>
+                            <select class="form-input" id="studentGender">
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                                <option value="Khác">Khác</option>
+                            </select>
+                        </div>
+                    </div>
 
-  return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold">{initial.id ? 'Sửa sách' : 'Thêm sách'}</h2>
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm text-gray-600">Tiêu đề</label>
-          <input name="title" value={form.title} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="text-sm text-gray-600">ISBN</label>
-          <input name="isbn" value={form.isbn} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="text-sm text-gray-600">Tác giả (phân cách bằng ,)</label>
-          <input name="authors" value={form.authors} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="text-sm text-gray-600">Thể loại</label>
-          <input name="category" value={form.category} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="text-sm text-gray-600">Năm</label>
-          <input name="year" value={form.year} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div>
-          <label className="text-sm text-gray-600">Số bản (copies)</label>
-          <input type="number" name="copies" value={form.copies} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-        <div className="col-span-2">
-          <label className="text-sm text-gray-600">Vị trí / Kệ</label>
-          <input name="location" value={form.location} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-      </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Ngày sinh</label>
+                            <input type="date" class="form-input" id="studentDOB">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CCCD/CMND</label>
+                            <input type="text" class="form-input" id="studentID">
+                        </div>
+                    </div>
 
-      <div className="mt-4 flex gap-2">
-        <PrimaryButton onClick={() => onSave && onSave(form)}>Lưu</PrimaryButton>
-        <SecondaryButton>Hủy</SecondaryButton>
-      </div>
+                    <div class="form-group">
+                        <label class="form-label">Email <span class="required">*</span></label>
+                        <input type="email" class="form-input" id="studentEmail" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="tel" class="form-input" id="studentPhone">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Địa chỉ</label>
+                        <input type="text" class="form-input" id="studentAddress">
+                    </div>
+                </form>
+            </div>
+
+            <div class="tab-content" id="academicInfo">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Mã sinh viên <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="studentCode" placeholder="Tự động sinh">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Khoa <span class="required">*</span></label>
+                        <select class="form-input" id="studentFaculty">
+                            <option value="">Chọn khoa</option>
+                            <option value="cntt">Công nghệ thông tin</option>
+                            <option value="kt">Kinh tế</option>
+                            <option value="nn">Ngoại ngữ</option>
+                            <option value="sp">Sư phạm</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Lớp</label>
+                        <select class="form-input" id="studentClass">
+                            <option value="">Chọn lớp</option>
+                            <option value="CNTT-K20A">CNTT-K20A</option>
+                            <option value="CNTT-K20B">CNTT-K20B</option>
+                            <option value="KT-K20A">KT-K20A</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Khóa học</label>
+                        <input type="text" class="form-input" id="studentCourse" placeholder="2020-2024">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Trạng thái học tập</label>
+                    <select class="form-input" id="studentStatus">
+                        <option value="active">Đang học</option>
+                        <option value="suspended">Đình chỉ</option>
+                        <option value="graduated">Đã tốt nghiệp</option>
+                        <option value="dropped">Thôi học</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ghi chú</label>
+                    <textarea class="form-input" id="studentNotes" rows="3"></textarea>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                <button class="btn btn-secondary" onclick="closeModal('studentModal')">Hủy</button>
+                <button class="btn btn-primary" onclick="saveStudent()">💾 Lưu sinh viên</button>
+            </div>
+        </div>
     </div>
-  );
-}
 
-// ---------- 5. Members List ----------
-export function MembersList({ onView }) {
-  const [q, setQ] = useState('');
-  const filtered = sampleMembers.filter(m => m.name.toLowerCase().includes(q.toLowerCase()) || m.id.includes(q));
+    <!-- Student Detail Modal -->
+    <div class="modal" id="studentDetailModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Chi tiết Sinh viên</h2>
+                <button class="close-btn" onclick="closeModal('studentDetailModal')">✕</button>
+            </div>
 
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Quản lý Thành viên</h2>
-        <div className="flex items-center gap-2">
-          <input value={q} onChange={e => setQ(e.target.value)} className="border rounded px-3 py-1" placeholder="Tìm tên, mã thành viên, email..." />
-          <PrimaryButton>Thêm thành viên</PrimaryButton>
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div class="avatar" style="width: 100px; height: 100px; font-size: 2rem; margin: 0 auto 1rem;">NT</div>
+                <h2>Nguyễn Văn Thành</h2>
+                <p style="color: #7f8c8d;">SV001 - CNTT-K20A</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab(event, 'detailPersonal')">Hồ sơ cá nhân</button>
+                <button class="tab" onclick="switchTab(event, 'detailGrades')">Kết quả học tập</button>
+                <button class="tab" onclick="switchTab(event, 'detailTraining')">Điểm rèn luyện</button>
+                <button class="tab" onclick="switchTab(event, 'detailActivity')">Hoạt động</button>
+            </div>
+
+            <div class="tab-content active" id="detailPersonal">
+                <table style="width: 100%;">
+                    <tr><td style="padding: 0.5rem; font-weight: 600;">Họ và tên:</td><td style="padding: 0.5rem;">Nguyễn Văn Thành</td></tr>
+                    <tr><td style="padding: 0.5rem; font-weight: 600;">Ngày sinh:</td><td style="padding: 0.5rem;">15/03/2002</td></tr>
+                    <tr><td style="padding: 0.5rem; font-weight: 600;">Giới tính:</td><td style="padding: 0.5rem;">Nam</td></tr>
+                    <tr><td style="padding: 0.5rem; font-weight: 600;">CCCD:</td><td style="padding: 0.5rem;">001202012345</td></tr>
+                    <tr><td style="padding: 0.5rem; font-weight: 600;">Email:</td><td style="padding: 0.5rem;">thanh.nv@student.edu.vn</td></tr>
+                    <tr><td style="padding: 0.5rem; font-weight: 600;">Số điện thoại:</td><td style="padding: 0.5rem;">0912345678</td></tr>
+                    <tr><td style="padding: 0.5rem; font-weight: 600;">Địa chỉ:</td><td style="padding: 0.5rem;">123 Nguyễn Huệ, Q.1, TP.HCM</td></tr>
+                </table>
+            </div>
+
+            <div class="tab-content" id="detailGrades">
+                <table style="width: 100%;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 0.8rem;">Học kỳ</th>
+                            <th style="padding: 0.8rem;">Môn học</th>
+                            <th style="padding: 0.8rem;">Tín chỉ</th>
+                            <th style="padding: 0.8rem;">Điểm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.8rem;">HK1-2020</td>
+                            <td style="padding: 0.8rem;">Lập trình cơ bản</td>
+                            <td style="padding: 0.8rem;">3</td>
+                            <td style="padding: 0.8rem;">8.5</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.8rem;">HK1-2020</td>
+                            <td style="padding: 0.8rem;">Cấu trúc dữ liệu</td>
+                            <td style="padding: 0.8rem;">3</td>
+                            <td style="padding: 0.8rem;">9.0</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                    <strong>GPA tích lũy: 8.5/10</strong>
+                </div>
+            </div>
+
+            <div class="tab-content" id="detailTraining">
+                <table style="width: 100%;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 0.8rem;">Tiêu chí</th>
+                            <th style="padding: 0.8rem;">Điểm tối đa</th>
+                            <th style="padding: 0.8rem;">Điểm đạt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.8rem;">Ý thức học tập</td>
+                            <td style="padding: 0.8rem;">30</td>
+                            <td style="padding: 0.8rem;">28</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.8rem;">Ý thức chấp hành pháp luật</td>
+                            <td style="padding: 0.8rem;">25</td>
+                            <td style="padding: 0.8rem;">23</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.8rem;">Hoạt động xã hội</td>
+                            <td style="padding: 0.8rem;">25</td>
+                            <td style="padding: 0.8rem;">20</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.8rem;">Quan hệ cộng đồng</td>
+                            <td style="padding: 0.8rem;">20</td>
+                            <td style="padding: 0.8rem;">18</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="margin-top: 1rem; padding: 1rem; background: #e8f5e9; border-radius: 8px; color: #2e7d32;">
+                    <strong>Tổng điểm: 89/100 - Xếp loại: Tốt</strong>
+                </div>
+            </div>
+
+            <div class="tab-content" id="detailActivity">
+                <div style="padding: 1rem;">
+                    <h4>Hoạt động tham gia:</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 0.5rem; border-bottom: 1px solid #eee;">📌 CLB Lập trình - Thành viên (2020-2024)</li>
+                        <li style="padding: 0.5rem; border-bottom: 1px solid #eee;">🎯 Hackathon 2021 - Giải Nhì</li>
+                        <li style="padding: 0.5rem; border-bottom: 1px solid #eee;">🌱 Tình nguyện mùa hè xanh 2022</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                <button class="btn btn-secondary">📄 In hồ sơ</button>
+                <button class="btn btn-primary" onclick="editStudent('SV001')">✏️ Chỉnh sửa</button>
+            </div>
         </div>
-      </div>
-
-      <div className="bg-white rounded shadow overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50"><tr><th className="p-3">Avatar</th><th className="p-3">Tên</th><th className="p-3">Mã</th><th className="p-3">Email</th><th className="p-3">Loại</th><th className="p-3">Trạng thái</th><th className="p-3">Số sách mượn</th><th className="p-3">Hành động</th></tr></thead>
-          <tbody>
-            {filtered.map(m => (
-              <tr key={m.id} className="border-t"><td className="p-3"> <div className="w-8 h-8 bg-gray-100 rounded-full" /> </td><td className="p-3">{m.name}</td><td className="p-3">{m.id}</td><td className="p-3">{m.email}</td><td className="p-3">{m.type}</td><td className="p-3"><IconBadge>{m.status}</IconBadge></td><td className="p-3">{m.loans}</td><td className="p-3"><button onClick={() => onView(m)} className="text-indigo-600">Xem</button></td></tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
-  );
-}
 
-// ---------- 6. Member Detail ----------
-export function MemberDetail({ member, onBack }) {
-  if (!member) return <div className="p-6">Chọn một thành viên để xem chi tiết.</div>;
+    <!-- Create Class Modal -->
+    <div class="modal" id="classModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Tạo lớp học mới</h2>
+                <button class="close-btn" onclick="closeModal('classModal')">✕</button>
+            </div>
 
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">{member.name}</h2>
-        <div className="text-sm text-gray-600">Mã: {member.id}</div>
-      </div>
+            <form>
+                <div class="form-group">
+                    <label class="form-label">Mã lớp <span class="required">*</span></label>
+                    <input type="text" class="form-input" placeholder="VD: CNTT-K20A">
+                </div>
 
-      <div className="bg-white rounded shadow p-4">
-        <div className="grid grid-cols-3 gap-4">
-          <div>
-            <h4 className="text-sm text-gray-500">Email</h4>
-            <div className="font-medium">{member.email}</div>
-          </div>
-          <div>
-            <h4 className="text-sm text-gray-500">Loại</h4>
-            <div className="font-medium">{member.type}</div>
-          </div>
-          <div>
-            <h4 className="text-sm text-gray-500">Trạng thái</h4>
-            <div className="font-medium">{member.status}</div>
-          </div>
+                <div class="form-group">
+                    <label class="form-label">Tên lớp <span class="required">*</span></label>
+                    <input type="text" class="form-input" placeholder="VD: Công nghệ thông tin K20A">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Khoa</label>
+                        <select class="form-input">
+                            <option value="">Chọn khoa</option>
+                            <option value="cntt">Công nghệ thông tin</option>
+                            <option value="kt">Kinh tế</option>
+                            <option value="nn">Ngoại ngữ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Khóa học</label>
+                        <input type="text" class="form-input" placeholder="2020-2024">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Giảng viên chủ nhiệm</label>
+                    <select class="form-input">
+                        <option value="">Chọn GVCN</option>
+                        <option value="gv1">TS. Nguyễn Văn A</option>
+                        <option value="gv2">TS. Trần Thị B</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Sĩ số tối đa</label>
+                    <input type="number" class="form-input" value="40">
+                </div>
+            </form>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                <button class="btn btn-secondary" onclick="closeModal('classModal')">Hủy</button>
+                <button class="btn btn-primary" onclick="saveClass()">💾 Tạo lớp học</button>
+            </div>
         </div>
-
-        <div className="mt-6">
-          <h4 className="font-semibold">Lịch sử mượn</h4>
-          <div className="text-sm text-gray-600 mt-2">(Demo) Hiển thị lịch sử mượn/trả của thành viên</div>
-        </div>
-
-        <div className="mt-4">
-          <h4 className="font-semibold">Fines & Fees</h4>
-          <div className="text-sm text-gray-600 mt-2">Nợ: {member.fines ? `${member.fines} VND` : '0 VND'}</div>
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <button onClick={onBack} className="text-sm text-gray-600 hover:underline">← Quay lại</button>
-      </div>
     </div>
-  );
-}
 
-// ---------- 7. Checkout / Return ----------
-export function CheckoutReturn() {
-  const [memberId, setMemberId] = useState('');
-  const [scanned, setScanned] = useState([]);
+    <script>
+        // Sample data
+        let students = [
+            { id: 'SV001', name: 'Nguyễn Văn Thành', gender: 'Nam', class: 'CNTT-K20A', faculty: 'CNTT', course: '2020-2024', gpa: 8.5, status: 'active' },
+            { id: 'SV002', name: 'Trần Thị Hương Anh', gender: 'Nữ', class: 'CNTT-K20B', faculty: 'CNTT', course: '2020-2024', gpa: 7.2, status: 'warning' },
+            { id: 'SV003', name: 'Lê Minh Tuấn', gender: 'Nam', class: 'KT-K20A', faculty: 'KT', course: '2020-2024', gpa: 8.8, status: 'active' },
+            { id: 'SV004', name: 'Phạm Thu Hương', gender: 'Nữ', class: 'CNTT-K20A', faculty: 'CNTT', course: '2020-2024', gpa: 9.0, status: 'active' }
+        ];
 
-  function addScan(code) {
-    setScanned(prev => [...prev, code]);
-  }
+        // Navigation
+        function showPage(pageName) {
+            const pages = ['dashboard', 'students', 'classes', 'subjects', 'grades', 'statistics', 'settings'];
+            pages.forEach(page => {
+                const element = document.getElementById(page + 'Page');
+                if (element) {
+                    element.style.display = 'none';
+                }
+            });
 
-  return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold">Mượn / Trả nhanh</h2>
+            const targetPage = document.getElementById(pageName + 'Page');
+            if (targetPage) {
+                targetPage.style.display = 'block';
+            }
 
-      <div className="grid grid-cols-2 gap-6 mt-4">
-        <div className="bg-white rounded shadow p-4">
-          <label className="text-sm text-gray-600">Quét mã thành viên</label>
-          <input value={memberId} onChange={e => setMemberId(e.target.value)} className="w-full border rounded px-3 py-2" placeholder="Scan or enter member ID" />
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
 
-          <div className="mt-4">
-            <h4 className="font-semibold">Thông tin thành viên (demo)</h4>
-            <div className="text-sm text-gray-600">{memberId ? `Member: ${memberId}` : 'Chưa có thành viên'}</div>
-          </div>
-        </div>
+        // Modal functions
+        function openAddStudentModal() {
+            document.getElementById('studentModal').classList.add('active');
+        }
 
-        <div className="bg-white rounded shadow p-4">
-          <label className="text-sm text-gray-600">Quét mã sách</label>
-          <div className="flex gap-2 mt-2">
-            <input id="scan" className="w-full border rounded px-3 py-2" placeholder="Scan barcode..." onKeyDown={e => { if (e.key === 'Enter') { addScan(e.target.value); e.target.value = ''; } }} />
-            <SecondaryButton onClick={() => addScan('manual-scan-' + (scanned.length + 1))}>Add</SecondaryButton>
-          </div>
+        function openCreateClassModal() {
+            document.getElementById('classModal').classList.add('active');
+        }
 
-          <div className="mt-4">
-            <h4 className="font-semibold">Giỏ mượn</h4>
-            <ul className="mt-2 space-y-2 text-sm">
-              {scanned.map((s, i) => <li key={i} className="flex justify-between items-center"><span>{s}</span><button className="text-red-600">Xóa</button></li>)}
-            </ul>
-          </div>
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
 
-          <div className="mt-4">
-            <PrimaryButton>Xác nhận Mượn</PrimaryButton>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+        function viewStudentDetail(studentId) {
+            document.getElementById('studentDetailModal').classList.add('active');
+        }
 
-// ---------- Preview App (default export) ----------
-export default function App() {
-  const [screen, setScreen] = useState('dashboard');
-  const [selectedBook, setSelectedBook] = useState(null);
-  const [selectedMember, setSelectedMember] = useState(null);
+        function editStudent(studentId) {
+            closeModal('studentDetailModal');
+            openAddStudentModal();
+            showNotification('Chế độ chỉnh sửa sinh viên ' + studentId, 'success');
+        }
 
-  function renderMain() {
-    switch (screen) {
-      case 'dashboard': return <Dashboard />;
-      case 'books': return <BooksList onView={(b) => { setSelectedBook(b); setScreen('bookDetail'); }} />;
-      case 'bookDetail': return <BookDetail book={selectedBook} onBack={() => setScreen('books')} />;
-      case 'addBook': return <AddEditBook onSave={(data) => { alert('Saved (mock): ' + JSON.stringify(data)); setScreen('books'); }} />;
-      case 'members': return <MembersList onView={(m) => { setSelectedMember(m); setScreen('memberDetail'); }} />;
-      case 'memberDetail': return <MemberDetail member={selectedMember} onBack={() => setScreen('members')} />;
-      case 'checkout': return <CheckoutReturn />;
-      default: return <Dashboard />;
-    }
-  }
+        function deleteStudent(studentId) {
+            if (confirm('Bạn có chắc chắn muốn xóa sinh viên này?')) {
+                showNotification('Đã xóa sinh viên ' + studentId, 'success');
+            }
+        }
 
-  return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex gap-6 items-center p-4 border-b bg-white">
-          <div className="text-lg font-bold">Library Mockups</div>
-          <nav className="flex gap-2 ml-6">
-            <button onClick={() => setScreen('dashboard')} className={`px-3 py-1 rounded ${screen === 'dashboard' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>Dashboard</button>
-            <button onClick={() => setScreen('books')} className={`px-3 py-1 rounded ${screen === 'books' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>Kho sách</button>
-            <button onClick={() => setScreen('addBook')} className={`px-3 py-1 rounded ${screen === 'addBook' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>Thêm sách</button>
-            <button onClick={() => setScreen('members')} className={`px-3 py-1 rounded ${screen === 'members' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>Thành viên</button>
-            <button onClick={() => setScreen('checkout')} className={`px-3 py-1 rounded ${screen === 'checkout' ? 'bg-indigo-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>Mượn/Trả</button>
-          </nav>
-        </div>
+        function saveStudent() {
+            const name = document.getElementById('studentName').value;
+            if (!name) {
+                showNotification('Vui lòng nhập đầy đủ thông tin bắt buộc!', 'error');
+                return;
+            }
+            showNotification('Đã lưu thông tin sinh viên thành công!', 'success');
+            closeModal('studentModal');
+        }
 
-        <main className="bg-gray-50">{renderMain()}</main>
-      </div>
-    </div>
-  );
-}
+        function saveClass() {
+            showNotification('Đã tạo lớp học thành công!', 'success');
+            closeModal('classModal');
+        }
+
+        // Tab switching
+        function switchTab(event, tabId) {
+            const tabContent = event.target.closest('.modal-content') || document;
+            
+            tabContent.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            tabContent.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            tabContent.querySelector('#' + tabId).classList.add('active');
+        }
+
+        // Notification
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification ' + type + ' active';
+            
+            setTimeout(() => {
+                notification.classList.remove('active');
+            }, 3000);
+        }
+
+        // Search functionality
+        document.getElementById('globalSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            console.log('Đang tìm kiếm:', searchTerm);
+        });
+
+        // Filter functionality
+        document.getElementById('facultyFilter')?.addEventListener('change', function(e) {
+            console.log('Lọc theo khoa:', e.target.value);
+        });
+
+        document.getElementById('statusFilter')?.addEventListener('change', function(e) {
+            console.log('Lọc theo trạng thái:', e.target.value);
+        });
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                console.log('Ctrl+S: Lưu nhanh');
+            }
+            if (e.key === 'n' && !e.target.matches('input, textarea')) {
+                openAddStudentModal();
+            }
+            if (e.key === 'f' && !e.target.matches('input, textarea')) {
+                e.preventDefault();
+                document.getElementById('globalSearch').focus();
+            }
+        });
+
+        // Auto-save draft
+        let autoSaveTimer;
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('input', function() {
+                clearTimeout(autoSaveTimer);
+                autoSaveTimer = setTimeout(() => {
+                    console.log('Tự động lưu bản nháp...');
+                }, 20000);
+            });
+        });
+
+        // Initialize on load
+        window.addEventListener('load', function() {
+            console.log('Hệ thống quản lý sinh viên đã sẵn sàng!');
+        });
+    </script>
+</body>
+</html>
